@@ -197,7 +197,7 @@ module MCollective
         empty_filter = Util.empty_filter
         config_file = Util.config_file_for_user
 
-        Util.default_options.should == {:verbose => false, :disctimeout => 2, :timeout => 5, :config => config_file, :filter => empty_filter, :collective => nil}
+        Util.default_options.should == {:verbose => false, :disctimeout => nil, :timeout => 5, :config => config_file, :filter => empty_filter, :collective => nil, :discovery_method => nil, :discovery_options => []}
       end
     end
 

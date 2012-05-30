@@ -7,17 +7,27 @@ module MCollective
     describe Client do
       describe "#limit_method" do
         before do
-          client = stub
+          client = mock
+          discoverer = mock
+          ddl = stub
+
+          ddl.stubs(:meta).returns({:timeout => 2})
+
+          discoverer.stubs(:force_direct_mode?).returns(false)
+          discoverer.stubs(:ddl).returns(ddl)
+          discoverer.stubs(:discovery_method).returns("mc")
 
           client.stubs("options=")
           client.stubs(:collective).returns("mcollective")
           client.stubs(:timeout_for_compound_filter).returns(0)
+          client.stubs(:discoverer).returns(discoverer)
 
           Config.any_instance.stubs(:loadconfig).with("/nonexisting").returns(true)
           MCollective::Client.expects(:new).returns(client)
           Config.any_instance.stubs(:direct_addressing).returns(true)
 
           @client = Client.new("foo", {:options => {:filter => Util.empty_filter, :config => "/nonexisting"}})
+          @client.stubs(:discoverer).returns(discoverer)
         end
 
         it "should force strings to symbols" do
@@ -39,8 +49,19 @@ module MCollective
       describe "#method_missing" do
         before do
           client = stub
+          discoverer = stub
+          ddl = stub
+
+          ddl.stubs(:meta).returns({:timeout => 2})
+
+          discoverer.stubs(:force_direct_mode?).returns(false)
+          discoverer.stubs(:ddl).returns(ddl)
+          discoverer.stubs(:discovery_method).returns("mc")
+
           client.stubs("options=")
           client.stubs(:collective).returns("mcollective")
+          client.stubs(:discoverer).returns(discoverer)
+
           MCollective::Client.stubs(:new).returns(client)
 
           Config.any_instance.stubs(:loadconfig).with("/nonexisting").returns(true)
@@ -132,9 +153,18 @@ module MCollective
       describe "#limit_targets=" do
         before do
           client = stub
+          discoverer = stub
+          ddl = stub
+
+          ddl.stubs(:meta).returns({:timeout => 2})
+
+          discoverer.stubs(:force_direct_mode?).returns(false)
+          discoverer.stubs(:ddl).returns(ddl)
+          discoverer.stubs(:discovery_method).returns("mc")
 
           client.stubs("options=")
           client.stubs(:collective).returns("mcollective")
+          client.stubs(:discoverer).returns(discoverer)
 
           Config.any_instance.stubs(:loadconfig).with("/nonexisting").returns(true)
           MCollective::Client.expects(:new).returns(client)
@@ -169,9 +199,18 @@ module MCollective
       describe "#call_agent_batched" do
         before do
           @client = stub
+          @discoverer = stub
+          @ddl = stub
+
+          @ddl.stubs(:meta).returns({:timeout => 2})
+
+          @discoverer.stubs(:force_direct_mode?).returns(false)
+          @discoverer.stubs(:ddl).returns(@ddl)
+          @discoverer.stubs(:discovery_method).returns("mc")
 
           @client.stubs("options=")
           @client.stubs(:collective).returns("mcollective")
+          @client.stubs(:discoverer).returns(@discoverer)
 
           Config.any_instance.stubs(:loadconfig).with("/nonexisting").returns(true)
           MCollective::Client.expects(:new).returns(@client)
@@ -288,9 +327,18 @@ module MCollective
       describe "#batch_sleep_time=" do
         before do
           @client = stub
+          @discoverer = stub
+          @ddl = stub
+
+          @ddl.stubs(:meta).returns({:timeout => 2})
+
+          @discoverer.stubs(:force_direct_mode?).returns(false)
+          @discoverer.stubs(:ddl).returns(@ddl)
+          @discoverer.stubs(:discovery_method).returns("mc")
 
           @client.stubs("options=")
           @client.stubs(:collective).returns("mcollective")
+          @client.stubs(:discoverer).returns(@discoverer)
 
           Config.any_instance.stubs(:loadconfig).with("/nonexisting").returns(true)
           MCollective::Client.expects(:new).returns(@client)
@@ -315,9 +363,18 @@ module MCollective
       describe "#batch_size=" do
         before do
           @client = stub
+          @discoverer = stub
+          @ddl = stub
+
+          @ddl.stubs(:meta).returns({:timeout => 2})
+
+          @discoverer.stubs(:force_direct_mode?).returns(false)
+          @discoverer.stubs(:ddl).returns(@ddl)
+          @discoverer.stubs(:discovery_method).returns("mc")
 
           @client.stubs("options=")
           @client.stubs(:collective).returns("mcollective")
+          @client.stubs(:discoverer).returns(@discoverer)
 
           Config.any_instance.stubs(:loadconfig).with("/nonexisting").returns(true)
           MCollective::Client.expects(:new).returns(@client)
@@ -354,10 +411,19 @@ module MCollective
       describe "#discover" do
         before do
           @client = stub
+          @discoverer = stub
+          @ddl = stub
+
+          @ddl.stubs(:meta).returns({:timeout => 2})
+
+          @discoverer.stubs(:force_direct_mode?).returns(false)
+          @discoverer.stubs(:ddl).returns(@ddl)
+          @discoverer.stubs(:discovery_method).returns("mc")
 
           @client.stubs("options=")
           @client.stubs(:collective).returns("mcollective")
           @client.stubs(:timeout_for_compound_filter).returns(0)
+          @client.stubs(:discoverer).returns(@discoverer)
 
           @stderr = stub
           @stdout = stub
@@ -436,6 +502,7 @@ module MCollective
           Config.any_instance.stubs(:direct_addressing).returns(false)
 
           @client.expects(:discover).with({'identity' => ['/foo/'], 'agent' => ['foo']}, 2).once.returns(["foo"])
+
           client = Client.new("foo", {:options => {:filter => {"identity" => ["/foo/"], "agent" => []}, :config => "/nonexisting"}})
 
           client.discover
@@ -445,7 +512,7 @@ module MCollective
 
         it "should print status to stderr if in verbose mode" do
           @client.expects(:discover).with({'identity' => [], 'compound' => [], 'fact' => [], 'agent' => ['foo'], 'cf_class' => []}, 2).returns(["foo"])
-          @stderr.expects(:print).with("Determining the amount of hosts matching filter for 2 seconds .... ")
+          @stderr.expects(:print).with("Discovering hosts using the mc method for 2 second(s) .... ")
           @stderr.expects(:puts).with(1)
 
           client = Client.new("foo", {:options => {:filter => Util.empty_filter, :config => "/nonexisting", :verbose => true, :disctimeout => 2, :stderr => @stderr, :stdout => @stdout}})
