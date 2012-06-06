@@ -1,9 +1,6 @@
 # discovers against a flatfile instead of the traditional network discovery
-#
-#  - the path to the file is hardcoded now
-#  - as its a file of identities, only identity filters are supported
-#
-# woot.
+# the flat file must have a node name per line which should match identities
+# as configured
 module MCollective
   class Discovery
     class Flatfile
@@ -13,6 +10,8 @@ module MCollective
         else
           raise "The flatfile discovery method needs a path to a text file"
         end
+
+        raise "Cannot read the file %s specified as discovery source" % file unless File.readable?(file)
 
         discovered = []
 
@@ -34,11 +33,7 @@ module MCollective
           discovered = hosts
         end
 
-        if limit > 0
-          return discovered.shuffle[0,limit]
-        else
-          return discovered.sort
-        end
+        discovered
       end
     end
   end
