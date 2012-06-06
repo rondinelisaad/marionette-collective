@@ -22,7 +22,7 @@ module MCollective
         @coreclient.stubs(:timeout_for_compound_filter).returns(0)
         @coreclient.stubs(:discoverer).returns(@discoverer)
 
-        Config.any_instance.stubs(:loadconfig).with("/nonexisting").returns(true)
+        Config.instance.stubs(:loadconfig).with("/nonexisting").returns(true)
         MCollective::Client.stubs(:new).returns(@coreclient)
         Config.instance.stubs(:direct_addressing).returns(true)
 
@@ -205,7 +205,7 @@ module MCollective
           client.stubs(:collective).returns("mcollective")
           client.stubs(:discoverer).returns(discoverer)
 
-          Config.any_instance.stubs(:loadconfig).with("/nonexisting").returns(true)
+          Config.instance.stubs(:loadconfig).with("/nonexisting").returns(true)
           MCollective::Client.expects(:new).returns(client)
           Config.instance.stubs(:direct_addressing).returns(true)
 
@@ -251,7 +251,7 @@ module MCollective
           @client.stubs(:collective).returns("mcollective")
           @client.stubs(:discoverer).returns(@discoverer)
 
-          Config.any_instance.stubs(:loadconfig).with("/nonexisting").returns(true)
+          Config.instance.stubs(:loadconfig).with("/nonexisting").returns(true)
           MCollective::Client.expects(:new).returns(@client)
           Config.instance.stubs(:direct_addressing).returns(true)
         end
@@ -379,7 +379,7 @@ module MCollective
 
         it "should only allow batch sleep to be set for direct addressing capable clients" do
           Config.instance.stubs(:direct_addressing).returns(false)
-          Config.any_instance.stubs(:loadconfig).with("/nonexisting").returns(true)
+          Config.instance.stubs(:loadconfig).with("/nonexisting").returns(true)
           client = Client.new("foo", {:options => {:filter => Util.empty_filter, :config => "/nonexisting"}})
 
           expect { client.batch_sleep_time = 5 }.to raise_error("Can only set batch sleep time if direct addressing is supported")
@@ -398,7 +398,7 @@ module MCollective
         end
 
         it "should only allow batch size to be set for direct addressing capable clients" do
-          Config.any_instance.stubs(:loadconfig).with("/nonexisting").returns(true)
+          Config.instance.stubs(:loadconfig).with("/nonexisting").returns(true)
           Config.instance.stubs(:direct_addressing).returns(false)
           client = Client.new("foo", {:options => {:filter => Util.empty_filter, :config => "/nonexisting"}})
 

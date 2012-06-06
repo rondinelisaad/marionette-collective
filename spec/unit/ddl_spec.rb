@@ -11,14 +11,14 @@ module MCollective
 
     describe "#findddlfile" do
       it "should construct the correct ddl file name" do
-        Config.any_instance.expects(:libdir).returns(["/nonexisting"])
+        Config.instance.expects(:libdir).returns(["/nonexisting"])
         File.expects("exist?").with("/nonexisting/mcollective/agent/foo.ddl").returns(false)
 
         @ddl.findddlfile("foo").should == false
       end
 
       it "should check each libdir for a ddl file" do
-        Config.any_instance.expects(:libdir).returns(["/nonexisting1", "/nonexisting2"])
+        Config.instance.expects(:libdir).returns(["/nonexisting1", "/nonexisting2"])
         File.expects("exist?").with("/nonexisting1/mcollective/agent/foo.ddl").returns(false)
         File.expects("exist?").with("/nonexisting2/mcollective/agent/foo.ddl").returns(false)
 
@@ -26,7 +26,7 @@ module MCollective
       end
 
       it "should return the ddl file path if found" do
-        Config.any_instance.expects(:libdir).returns(["/nonexisting"])
+        Config.instance.expects(:libdir).returns(["/nonexisting"])
         File.expects("exist?").with("/nonexisting/mcollective/agent/foo.ddl").returns(true)
         Log.expects(:debug).with("Found foo ddl at /nonexisting/mcollective/agent/foo.ddl")
 

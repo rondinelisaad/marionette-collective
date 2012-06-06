@@ -212,7 +212,7 @@ module MCollective
         security.expects(:encoderequest).with("identity", 'payload', '123', Util.empty_filter, 'rspec_agent', 'mcollective', 60).twice
         PluginManager.expects("[]").with("security_plugin").returns(security).twice
 
-        Config.any_instance.expects(:identity).returns("identity").times(4)
+        Config.instance.expects(:identity).returns("identity").times(4)
 
         Message.any_instance.expects(:requestid).returns("123").twice
 
