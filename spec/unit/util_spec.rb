@@ -194,6 +194,7 @@ module MCollective
 
     describe "#default_options" do
       it "should supply correct default options" do
+        Config.instance.stubs(:default_discovery_options).returns([])
         empty_filter = Util.empty_filter
         config_file = Util.config_file_for_user
 

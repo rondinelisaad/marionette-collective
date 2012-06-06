@@ -119,12 +119,6 @@ module MCollective
       timeout = timeout + compount_timeout
 
       discovered = @discoverer.discover(filter, timeout, limit)
-
-      if limit > 0
-        return discovered[0,limit]
-      else
-        return discovered
-      end
     end
 
     # Send a request, performs the passed block for each response

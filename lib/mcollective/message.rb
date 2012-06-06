@@ -219,7 +219,7 @@ module MCollective
         # send it as is.
         if @discovered_hosts && Config.instance.direct_addressing
           if @discovered_hosts.size <= Config.instance.direct_addressing_threshold
-            @type = :direct_request
+            self.type = :direct_request
             Log.debug("Handling #{requestid} as a direct request")
           end
 

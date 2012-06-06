@@ -53,7 +53,7 @@ module MCollective
         @force_direct_request = false
         @reply_to = initial_options[:reply_to]
         @discovery_method = initial_options[:discovery_method]
-        @discovery_options = initial_options[:discovery_options]
+        @discovery_options = initial_options[:discovery_options] || []
 
         @batch_size = Integer(initial_options[:batch_size] || 0)
         @batch_sleep_time = Float(initial_options[:batch_sleep_time] || 1)
@@ -480,10 +480,9 @@ module MCollective
           # and we do not want to degrade that experience just to allow compounds
           # on other discovery plugins the UX would be too bad raising complex sets
           # of errors etc.
-          force_discovery_method_by_filter(options[:filter])
+          @client.discoverer.force_discovery_method_by_filter(options[:filter])
 
           actual_timeout = options[:disctimeout] + @client.timeout_for_compound_filter(options[:filter]["compound"])
-
           if actual_timeout > 0
             @stderr.print("Discovering hosts using the %s method for %d second(s) .... " % [@client.discoverer.discovery_method, actual_timeout]) if verbose
           else
@@ -513,19 +512,6 @@ module MCollective
         RPC.discovered(@discovered_agents)
 
         @discovered_agents
-      end
-
-      # checks if compound filters are used and then forces the 'mc' discovery plugin
-      def force_discovery_method_by_filter(filter)
-        unless @client.discoverer.discovery_method == "mc"
-          unless filter["compound"].empty?
-            Log.info "Switching to mc discovery method because compound filters are used"
-            self.discovery_method = "mc"
-            return true
-          end
-        end
-
-        return false
       end
 
       # Provides a normal options hash like you would get from

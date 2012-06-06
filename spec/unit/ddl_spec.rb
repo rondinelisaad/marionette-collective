@@ -104,6 +104,57 @@ module MCollective
       end
     end
 
+    describe "#discovery_interface" do
+      it "should fail for non discovery plugin DDLs" do
+        expect { @ddl.discovery_interface }.to raise_error("Only discovery DDLs have discovery interfaces")
+      end
+
+      it "should return correct data" do
+        @ddl.instance_variable_set("@plugintype", :discovery)
+        @ddl.discovery do
+          @ddl.capabilities :identity
+        end
+
+        @ddl.discovery_interface.should == {:capabilities => [:identity]}
+      end
+    end
+
+    describe "#capabilities" do
+      it "should fail on non discovery plugins" do
+        expect { @ddl.capabilities :rspec }.to raise_error("Only discovery DDLs have capabilities")
+      end
+
+      it "should support non arrays" do
+        @ddl.instance_variable_set("@plugintype", :discovery)
+        @ddl.discovery do
+          @ddl.capabilities :identity
+        end
+        @ddl.discovery_interface.should == {:capabilities => [:identity]}
+      end
+
+      it "should not accept empty capability lists" do
+        @ddl.instance_variable_set("@plugintype", :discovery)
+        @ddl.discovery do
+          expect { @ddl.capabilities [] }.to raise_error("Discovery plugin capabilities can't be empty")
+        end
+      end
+
+      it "should only accept known capabilities" do
+        @ddl.instance_variable_set("@plugintype", :discovery)
+        @ddl.discovery do
+          expect { @ddl.capabilities :rspec }.to raise_error(/rspec is not a valid capability/)
+        end
+      end
+
+      it "should correctly store the capabilities" do
+        @ddl.instance_variable_set("@plugintype", :discovery)
+        @ddl.discovery do
+          @ddl.capabilities [:identity, :classes]
+        end
+        @ddl.discovery_interface.should == {:capabilities => [:identity, :classes]}
+      end
+    end
+
     describe "#dataquery_interface" do
       it "should fail for non data plugins" do
         expect { @ddl.dataquery_interface }.to raise_error("Only data DDLs have data queries")
@@ -277,7 +328,6 @@ module MCollective
 
     describe "#help" do
       it "should use conventional template paths when none is provided" do
-        Config.instance.set_config_defaults("")
         File.expects(:read).with("/etc/mcollective/rpc-help.erb").returns("rspec")
         @ddl.help.should == "rspec"
       end

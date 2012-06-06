@@ -1,13 +1,13 @@
 module MCollective
   class Discovery
     def initialize(client)
-      @known_methods = load_known_methods
+      @known_methods = find_known_methods
       @default_method = Config.instance.default_discovery_method
       @client = client
     end
 
-    def load_known_methods
-      @known_methods = PluginManager.find("discovery")
+    def find_known_methods
+      PluginManager.find("discovery")
     end
 
     def has_method?(method)
@@ -28,7 +28,10 @@ module MCollective
       end
 
       raise "Unknown discovery method %s" % method unless has_method?(method)
-      raise "Custom discovery methods require direct addressing mode" unless Config.instance.direct_addressing
+
+      unless method == "mc"
+        raise "Custom discovery methods require direct addressing mode" unless Config.instance.direct_addressing
+      end
 
       return method
     end
