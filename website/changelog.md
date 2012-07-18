@@ -8,6 +8,7 @@ toc: false
 
 |Date|Description|Ticket|
 |----|-----------|------|
+|2012/07/18|Create a thread safe caching layer and use it to optimize loading of DDL files|15582|
 |2012/07/17|Update the *name* field in the rpcutil DDL for consistency|15558
 |2012/07/17|Validate requests against the DDL in the agents prior to authorization or calling actions|15557|
 |2012/07/17|Refactor the single big DDL class into a class per type of plugin|15109|
