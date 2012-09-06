@@ -87,12 +87,12 @@ module MCollective
                 # appand the results only according to what the DDL says
                 case display
                   when :ok
-                    if status == 0
+                    if [0, 6].include?(status)
                       result_text << text_for_result(sender, status, message, result, ddl)
                     end
 
                   when :failed
-                    if status > 0
+                    if status > 0 && status < 6
                       result_text << text_for_result(sender, status, message, result, ddl)
                     end
 
@@ -122,7 +122,8 @@ module MCollective
                      Util.colorize(:yellow, "Unknown Action"),
                      Util.colorize(:yellow, "Missing Request Data"),
                      Util.colorize(:yellow, "Invalid Request Data"),
-                     Util.colorize(:red, "Unknown Request Status")]
+                     Util.colorize(:red, "Unknown Request Status"),
+                     Util.colorize(:green, "Request scheduled")]
 
         result_text = "%-40s %s\n" % [sender, statusses[status]]
         result_text << "   %s\n" % [Util.colorize(:yellow, msg)] unless msg == "OK"
@@ -172,6 +173,7 @@ module MCollective
                 result_text << " " << result[k].pretty_inspect.split("\n").join("\n" << padding) << "\n"
               end
             end
+          elsif status == 6
           else
             result_text << "\n\t" + result.pretty_inspect.split("\n").join("\n\t")
           end

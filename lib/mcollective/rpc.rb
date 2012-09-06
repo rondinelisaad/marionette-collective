@@ -14,6 +14,7 @@ module MCollective
     autoload :Reply, "mcollective/rpc/reply"
     autoload :Request, "mcollective/rpc/request"
     autoload :Result, "mcollective/rpc/result"
+    autoload :Scheduler, "mcollective/rpc/scheduler"
     autoload :Stats, "mcollective/rpc/stats"
 
     # Creates a standard options hash, pass in a block to add extra headings etc

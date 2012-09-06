@@ -25,15 +25,25 @@ class MCollective::Application::Rpc<MCollective::Application
          :default        => [],
          :validate       => Proc.new {|val| val.match(/^(.+?)=(.+)$/) ? true : "Could not parse --arg #{val} should be of the form key=val" }
 
+  option :schedule,
+         :description   => "Schedule action for the future",
+         :arguments     => ["-s", "--schedule TIME"],
+         :type          => String,
+         :default       => false
+
+  option :status,
+         :description   => "Status for a previously scheduled action",
+         :arguments     => ["--status ACTION"],
+         :type          => String,
+         :default       => nil
+
   def post_option_parser(configuration)
     # handle the alternative format that optparse cant parse
     unless (configuration.include?(:agent) && configuration.include?(:action))
       if ARGV.length >= 2
-        configuration[:agent] = ARGV[0]
-        ARGV.delete_at(0)
+        configuration[:agent] = ARGV.delete_at(0)
 
-        configuration[:action] = ARGV[0]
-        ARGV.delete_at(0)
+        configuration[:action] = ARGV.delete_at(0)
 
         ARGV.each do |v|
           if v =~ /^(.+?)=(.+)$/
@@ -83,6 +93,22 @@ class MCollective::Application::Rpc<MCollective::Application
 
     string_to_ddl_type(configuration[:arguments], mc.ddl.action_interface(configuration[:action])) if mc.ddl
 
+    summarize = true
+
+    if configuration[:schedule]
+      require 'chronic'
+
+      schedule_time = Chronic.parse(configuration[:schedule], :ambiguous_time_range => 8)
+
+      abort "Could not parse time %s" % configuration[:schedule] unless schedule_time
+
+      summarize = false
+      options[:force_display_mode] = :failed
+      configuration[:arguments][:mcollective_schedule] = schedule_time.to_i
+    elsif configuration[:status]
+      configuration[:arguments][:mcollective_schedule_status] = configuration[:status]
+    end
+
     if mc.reply_to
       configuration[:arguments][:process_results] = true
 
@@ -105,7 +131,11 @@ class MCollective::Application::Rpc<MCollective::Application
 
       printrpc mc.send(configuration[:action], configuration[:arguments])
 
-      printrpcstats :summarize => true, :caption => "#{configuration[:agent]}##{configuration[:action]} call stats" if mc.discover.size > 0
+      if configuration[:schedule]
+        puts "Request %s scheduled for %s local time" % [MCollective::Util.colorize(:bold, mc.stats.requestid), MCollective::Util.colorize(:bold, schedule_time.strftime("%F %r"))]
+      end
+
+      printrpcstats :summarize => summarize, :caption => "#{configuration[:agent]}##{configuration[:action]} call stats" if mc.discover.size > 0
 
       halt mc.stats
     end

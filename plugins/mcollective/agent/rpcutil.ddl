@@ -6,6 +6,30 @@ metadata    :name        => "rpcutil",
             :url         => "http://marionette-collective.org/",
             :timeout     => 10
 
+action "rm_scheduled_action", :description => "Removes a scheduled action" do
+    input :action,
+          :prompt      => "Action ID",
+          :description => "The ID of scheduled action",
+          :type        => :string,
+          :validation  => '^[a-z0-9]{32}$',
+          :optional    => false,
+          :maxlength   => 32
+end
+
+action "scheduled_actions", :description => "Obtain a list of scheduled actions" do
+    display :always
+
+    output :actions,
+           :description => "List of scheduled actions",
+           :display_as  => "Actions",
+           :default     => []
+
+    output :count,
+           :description => "Amount of scheduled actions",
+           :display_as  => "Count",
+           :default     => 0
+end
+
 action "collective_info", :description => "Info about the main and sub collectives" do
     display :always
 

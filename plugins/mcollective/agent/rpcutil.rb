@@ -17,6 +17,16 @@ module MCollective
         end
       end
 
+      action "rm_scheduled_action" do
+        RPC::Scheduler.new.delete!(request[:action])
+      end
+
+      action "scheduled_actions" do
+        scheduler = RPC::Scheduler.new
+        reply[:actions] = scheduler.scheduled_actions
+        reply[:count] = reply[:actions].size
+      end
+
       # Retrieve a single fact from the node
       action "get_fact" do
         validate :fact, String

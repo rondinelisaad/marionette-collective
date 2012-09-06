@@ -2,9 +2,11 @@ module MCollective
   module RPC
     # Simple class to manage compliant requests for MCollective::RPC agents
     class Request
-      attr_accessor :time, :action, :data, :sender, :agent, :uniqid, :caller, :ddl
+      attr_accessor :time, :action, :data, :sender, :agent, :uniqid, :caller, :ddl, :schedule, :schedule_status
+      attr_reader :msg
 
       def initialize(msg, ddl)
+        @msg = msg
         @time = msg[:msgtime]
         @action = msg[:body][:action]
         @data = msg[:body][:data]
@@ -12,6 +14,8 @@ module MCollective
         @agent = msg[:body][:agent]
         @uniqid = msg[:requestid]
         @caller = msg[:callerid] || "unknown"
+        @schedule = @data[:mcollective_schedule]
+        @schedule_status = @data[:mcollective_schedule_status]
         @ddl = ddl
       end
 
@@ -25,9 +29,15 @@ module MCollective
       # If no :process_results is specified always respond else respond
       # based on the supplied property
       def should_respond?
-        return @data[:process_results] if @data.include?(:process_results)
+        @data.fetch(:process_results, true)
+      end
 
-        return true
+      def scheduled?
+        !!@schedule
+      end
+
+      def status_request?
+        !!@schedule_status
       end
 
       # If data is a hash, gives easy access to its members, else returns nil
@@ -37,9 +47,9 @@ module MCollective
       end
 
       def to_hash
-        return {:agent => @agent,
-                :action => @action,
-                :data => @data}
+        {:agent => @agent,
+         :action => @action,
+         :data => @data}
       end
 
       # Validate the request against the DDL
@@ -51,6 +61,12 @@ module MCollective
         to_hash.merge!({:sender   => @sender,
                         :callerid => @callerid,
                         :uniqid   => @uniqid}).to_json
+      end
+
+      def to_job
+        {"job" => uniqid,
+         "schedule" => schedule,
+         "msg" => msg}
       end
     end
   end

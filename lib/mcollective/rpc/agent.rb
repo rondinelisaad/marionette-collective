@@ -64,6 +64,8 @@ module MCollective
         @reply = RPC::Reply.new(@request.action, @ddl)
 
         begin
+          raise UnknownRPCAction, "Unknown action: #{@request.action}" unless has_action?(@request.action)
+
           # Incoming requests need to be validated against the DDL thus reusing
           # all the work users put into creating DDLs and creating a consistant
           # quality of input validation everywhere with the a simple once off
@@ -75,18 +77,17 @@ module MCollective
           # message
           authorization_hook(@request) if respond_to?("authorization_hook")
 
-          # Audits the request, currently continues processing the message
-          # we should make this a configurable so that an audit failure means
-          # a message wont be processed by this node depending on config
-          audit_request(@request, connection)
-
-          before_processing_hook(msg, connection)
-
-          if respond_to?("#{@request.action}_action")
-            send("#{@request.action}_action")
+          if @request.status_request?
+            Log.debug("Fetching scheduled request %s status" % @request.uniqid)
+            get_scheduled_action(@request)
+          elsif @request.scheduled?
+            Log.debug("Scheduling request %s for background execution" % @request.uniqid)
+            schedule_action(@request)
           else
-            raise UnknownRPCAction, "Unknown action: #{@request.action}"
+            Log.debug("Running request %s immediately" % @request.uniqid)
+            run_immediate_action(@request, connection)
           end
+
         rescue RPCAborted => e
           @reply.fail e.to_s, 1
 
@@ -103,8 +104,9 @@ module MCollective
           @reply.fail e.to_s, 5
 
         rescue Exception => e
+          Log.error("Could not run action %s: %s: %s" % [@request.action, e.class, e.to_s])
+          Log.error(e.backtrace.join("\n      "))
           @reply.fail e.to_s, 5
-
         end
 
         after_processing_hook
@@ -115,6 +117,33 @@ module MCollective
           Log.debug("Client did not request a response, surpressing reply")
           return nil
         end
+      end
+
+      def get_scheduled_action(request)
+        scheduler = Scheduler.new(:request => request)
+        scheduler.load_results(reply)
+      end
+
+      def schedule_action(request)
+        scheduler = Scheduler.new(:request => request)
+        scheduler.schedule_action
+
+        reply.statuscode = 6
+      end
+
+      def run_immediate_action(request, connection)
+        # Audits the request, currently continues processing the message
+        # we should make this a configurable so that an audit failure means
+        # a message wont be processed by this node depending on config
+        audit_request(request, connection)
+
+        before_processing_hook(request.msg, connection)
+
+        send("#{request.action}_action")
+      end
+
+      def has_action?(action)
+        respond_to?("#{@request.action}_action")
       end
 
       # By default RPC Agents support a toggle in the configuration that

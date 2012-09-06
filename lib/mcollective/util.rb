@@ -406,6 +406,14 @@ module MCollective
       found.include?(true)
     end
 
+    def self.atomic_file(file)
+      tempfile = Tempfile.new(File.basename(file), File.dirname(file))
+
+      yield(tempfile)
+
+      tempfile.close
+      File.rename(tempfile.path, file)
+    end
     # compare two software versions as commonly found in
     # package versions.
     #
