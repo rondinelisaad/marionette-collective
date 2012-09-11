@@ -8,6 +8,7 @@ toc: false
 
 |Date|Description|Ticket|
 |----|-----------|------|
+|*2012/09/13*|*Release 2.2.0*|16323|
 |2012/09/10|Update the vendored systemu gem|16289|
 |2012/09/06|Improve error reporting for empty certificate files|15924|
 |2012/09/05|Restore the verbose behavior while building packages|16216|
