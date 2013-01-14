@@ -1,6 +1,24 @@
+require 'i18n'
+require 'mcollective/key_value'
+
 module MCollective
   class Application
     include RPC
+
+    I18n.backend = I18n_KeyValue_Backend.new({})
+
+    class ApplicationError < StandardError
+      attr_reader :code, :args
+
+      def initialize(code, *args)
+        @code = code
+        @args = args
+      end
+
+      def to_s
+        I18n.t(@code) % @args
+      end
+    end
 
     class << self
       # Intialize a blank set of options if its the first time used
@@ -33,6 +51,10 @@ module MCollective
       # create multiple usage lines in --help output
       def usage(usage)
         self[:usage] << usage
+      end
+
+      def message(code, msg, lang="en")
+        I18n.backend.store_translations(lang, {code => msg})
       end
 
       def exclude_argument_sections(*sections)
@@ -180,7 +202,7 @@ module MCollective
             parser.send(*opts_array) do |v|
               validate_option(carg[:validate], carg[:name], v)
 
-              configuration[carg[:name]] = v
+              configuration[carg[:name]] = true
             end
 
           elsif carg[:type] == :array
@@ -219,8 +241,20 @@ module MCollective
         STDERR.puts "\nPlease run with --help for detailed help"
         exit 1
       end
+    end
 
+    def t(code)
+      I18n.t(code)
+    end
 
+    def show(code, *args)
+      puts t(code) % args
+    end
+
+    def error(code, *args)
+      error = ApplicationError.new(code, args)
+      error.set_backtrace caller
+      raise error
     end
 
     # Retrieves the full hash of application options
@@ -261,6 +295,11 @@ module MCollective
         e.backtrace.first << Util.colorize(:red, "  <----")
         err_dest.puts "\n%s %s" % [ Util.colorize(:red, e.to_s), Util.colorize(:bold, "(#{e.class.to_s})")]
         e.backtrace.each{|l| err_dest.puts "\tfrom #{l}"}
+      end
+
+      if e.is_a?(ApplicationError)
+        err_dest.puts
+        err_dest.puts "For more information visit http://kb.pl.com/%s" % e.code
       end
 
       disconnect

@@ -25,6 +25,10 @@ class MCollective::Application::Rpc<MCollective::Application
          :default        => [],
          :validate       => Proc.new {|val| val.match(/^(.+?)=(.+)$/) ? true : "Could not parse --arg #{val} should be of the form key=val" }
 
+  message :RPC01, "No agent, action and arguments specified"
+  message :RPC02, "Could not parse --arg %s"
+  message :RPC03, "Request sent with id: %s"
+
   def post_option_parser(configuration)
     # handle the alternative format that optparse cant parse
     unless (configuration.include?(:agent) && configuration.include?(:action))
@@ -40,12 +44,12 @@ class MCollective::Application::Rpc<MCollective::Application
             configuration[:arguments] = [] unless configuration.include?(:arguments)
             configuration[:arguments] << v
           else
-            STDERR.puts("Could not parse --arg #{v}")
+            error :RPC02, v
+            exit
           end
         end
       else
-        STDERR.puts("No agent, action and arguments specified")
-        exit!
+        error :RPC01
       end
     end
 
@@ -90,7 +94,7 @@ class MCollective::Application::Rpc<MCollective::Application
     elsif configuration[:no_results]
       configuration[:arguments][:process_results] = false
 
-      puts "Request sent with id: " + mc.send(configuration[:action], configuration[:arguments])
+      puts t(:RPC03) % mc.send(configuration[:action], configuration[:arguments])
     else
       # if there's stuff on STDIN assume its JSON that came from another
       # rpc or printrpc, we feed that in as discovery data
