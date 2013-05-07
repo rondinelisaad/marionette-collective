@@ -9,7 +9,7 @@ end
 require 'rake/packagetask'
 require 'rake/clean'
 require 'find'
-require 'rake/gempackagetask'
+require 'rubygems/package_task'
 
 PROJ_DOC_TITLE = "The Marionette Collective"
 PROJ_VERSION = "2.2.3"
@@ -65,7 +65,7 @@ spec = Gem::Specification.new do |s|
   end
 end
 
-Rake::GemPackageTask.new(spec) do |pkg|
+Gem::PackageTask.new(spec) do |pkg|
   pkg.need_tar = false
   pkg.need_zip = false
   pkg.package_dir = "build"
